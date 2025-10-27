@@ -1,0 +1,1 @@
+add_executable(euclid_gcd main.cpp)
