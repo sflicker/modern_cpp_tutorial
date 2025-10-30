@@ -1,0 +1,2 @@
+add_executable(linked_list_demo main.cpp)
+add_executable(modern_linked_list_demo linked_list_with_unique_ptr.cpp)

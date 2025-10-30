@@ -10,4 +10,5 @@ add_subdirectory(eratosthenes)
 add_subdirectory(smart_pointer_exercise)
 add_subdirectory(cyclic_ref)
 add_subdirectory(game_engine_scene_graph)
+add_subdirectory(linked_list)
 
