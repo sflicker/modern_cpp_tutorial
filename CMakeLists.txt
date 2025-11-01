@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.31)
-project(modern_tutor)
+project(modern_tutor LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_subdirectory(hello)
-add_subdirectory(unique_ptr)
-add_subdirectory(euclid_gcd)
-add_subdirectory(eratosthenes)
-add_subdirectory(smart_pointer_exercise)
-add_subdirectory(cyclic_ref)
-add_subdirectory(game_engine_scene_graph)
-add_subdirectory(linked_list)
+find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+
+add_subdirectory(tutorials)
+add_subdirectory(graphics_display)
+
 
