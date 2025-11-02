@@ -1,0 +1,2 @@
+add_executable(monto_carlo monte_carlo_main.cpp)
+target_link_libraries(monto_carlo PRIVATE graphics_display)

@@ -2,3 +2,6 @@ add_executable(linked_list_demo main.cpp)
 add_executable(modern_linked_list_demo linked_list_with_unique_ptr.cpp)
 add_executable(linked_list_graphics_demo linked_list_with_graphics.cpp)
 target_link_libraries(linked_list_graphics_demo PRIVATE graphics_display)
+
+add_executable(linked_list_graphics_demo2 linked_list_with_graphics2.cpp)
+target_link_libraries(linked_list_graphics_demo2 PRIVATE graphics_display)

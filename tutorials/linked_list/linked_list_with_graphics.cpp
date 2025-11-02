@@ -19,14 +19,14 @@ float y_min = 0;
 float x_max = 640;
 float y_max = 480;
 
-struct Shape {
+struct Circle {
     float x, y;
     float radius;
     sf::Color color;
 };
 
 struct Node {
-    std::unique_ptr<Shape> shape;
+    std::unique_ptr<Circle> shape;
     std::unique_ptr<Node> next;
     Node * prev = nullptr;        // raw pointer for circular link back
 };
@@ -142,30 +142,38 @@ int main() {
 
     std::cout << "Making shapes" << std::endl;
     std::unique_ptr<Scene> scene = std::make_unique<Scene>();
-    scene->shapes = std::make_unique<Node>();
+    //scene->shapes = std::make_unique<Node>();
     // scene->shapes->shape = std::make_unique<Shape>();
     // scene->shapes->shape->color = default_color;
     // scene->shapes->shape->x = x;
     // scene->shapes->shape->y = y;
     // scene->shapes->shape->radius = radius;
 
-    Node * tail = scene->shapes.get();
+    Node * tail = nullptr;
+    scene->shapes.get();
 
-    x += INC_X;
+//    x += INC_X;
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             std::unique_ptr<Node> new_node = std::make_unique<Node>();
-            new_node->shape = std::make_unique<Shape>();
+            new_node->shape = std::make_unique<Circle>();
             new_node->shape->color = default_color;
             new_node->shape->x = x;
             new_node->shape->y = y;
             new_node->shape->radius = radius;
-            tail->next = std::move(new_node);
-            tail = tail->next.get();
+            if (scene->shapes.get() == nullptr) {
+                scene->shapes = std::move(new_node);
+                tail = scene->shapes.get();
+            } else {
+                tail->next = std::move(new_node);
+                tail = tail->next.get();
+            }
+
             x += INC_X;
         }
         y += INC_Y;
+        x = 20;
     }
 
     // tail->next = std::move(head);
