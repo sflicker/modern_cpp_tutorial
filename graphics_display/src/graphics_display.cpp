@@ -22,6 +22,17 @@ void GraphicsDisplay::drawRect(float x, float y, float w, float h, sf::Color col
     mWindow.draw(rect);
 }
 
+void GraphicsDisplay::drawLine(float x1, float y1, float x2, float y2, float width, sf::Color color) {
+    sf::Vector2f p1(x1, y1);
+    sf::Vector2f p2(x2, y2);
+    sf::Vertex line[] = {{p1, color}, {p2, color}};
+    mWindow.draw(line, width, sf::Lines);
+}
+
+void GraphicsDisplay::drawLines(sf::VertexArray & lines) {
+    mWindow.draw(lines);
+}
+
 void GraphicsDisplay::display() { mWindow.display(); }
 
 bool GraphicsDisplay::isOpen() { return mWindow.isOpen(); }

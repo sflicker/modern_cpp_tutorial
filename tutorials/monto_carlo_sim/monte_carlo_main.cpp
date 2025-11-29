@@ -13,7 +13,7 @@
 #include "../../graphics_display/src/graphics_display.hpp"
 
 sf::Color overlap_color = sf::Color::Red;
-sf::Color default_color = sf::Color::Blue;
+sf::Color planet_color = sf::Color::Blue;
 double x_min = 0;
 double y_min = 0;
 double x_max = 1200;
@@ -235,7 +235,7 @@ float combine_radius(const Circle * lhs, const Circle * rhs) {
 void color_overlaps(Scene * scene) {
         // reset colors
         for (auto & circle : scene->shapes) {
-            circle.color = default_color;
+            circle.color = planet_color;
         }
 
         // change color if overlap
@@ -285,7 +285,7 @@ void populate_scene(int INC_X, int INC_Y, float x, float y, float radius, std::u
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            Circle circle(x,y,radius, default_color);
+            Circle circle(x,y,radius, planet_color);
             //new_node->shape = std::make_unique<Circle>();
             // cir->color = default_color;
             // cir->x = x;

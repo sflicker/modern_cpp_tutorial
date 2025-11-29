@@ -1,0 +1,1 @@
+add_executable(minimal_md main.cpp)

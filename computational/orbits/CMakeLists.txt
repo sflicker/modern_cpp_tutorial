@@ -1,0 +1,2 @@
+add_executable(orbit_main orbit_main.cpp)
+target_link_libraries(orbit_main PRIVATE graphics_display)
