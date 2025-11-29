@@ -4,23 +4,33 @@
 
 #ifndef MODERN_TUTOR_ORBIT_MAIN_HPP
 #define MODERN_TUTOR_ORBIT_MAIN_HPP
+#include <cstddef>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 
-struct Vect2 {
-    double x;
-    double y;
-    Vect2(double x, double y);
-    Vect2();
-};
+#include "Vect2.hpp"
 
 struct Body {
     double mass;
     Vect2 position;
     Vect2 velocity;
     Vect2 force;
+    sf::Color color;
+    float radius;
     Body(double mass, Vect2 &position, Vect2 &velocity, Vect2 &force);
 
     Body(double x, Vect2 vect2, Vect2 vect3, Vect2 vect4);
 };
+
+// struct Trail {
+//     sf::VertexArray _trail;
+//     Vect2 last_point;
+//     double min_delta;
+//     std::size_t max_points;
+//     sf::Color color;
+//
+//     void addTrailPoint(const Vect2 &position, sf::Color color = sf::Color::White) {};
+// };
 
 class OrbitMain {
 };
