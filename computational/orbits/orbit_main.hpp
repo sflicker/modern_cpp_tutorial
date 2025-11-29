@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
+#include "Trail.hpp"
 
 #include "Vect2.hpp"
 
@@ -17,9 +18,10 @@ struct Body {
     Vect2 force;
     sf::Color color;
     float radius;
-    Body(double mass, Vect2 &position, Vect2 &velocity, Vect2 &force);
+    Trail positions;
+//    Body(double mass, Vect2 &position, Vect2 &velocity, Vect2 &force, sf::Color & color, float radius);
 
-    Body(double x, Vect2 vect2, Vect2 vect3, Vect2 vect4);
+    Body(double mass, Vect2 vect2, Vect2 vect3, Vect2 vect4, sf::Color color, float radius);;
 };
 
 // struct Trail {

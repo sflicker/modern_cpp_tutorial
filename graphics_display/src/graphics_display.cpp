@@ -29,7 +29,7 @@ void GraphicsDisplay::drawLine(float x1, float y1, float x2, float y2, float wid
     mWindow.draw(line, width, sf::Lines);
 }
 
-void GraphicsDisplay::drawLines(sf::VertexArray & lines) {
+void GraphicsDisplay::drawLines(const sf::VertexArray & lines) {
     mWindow.draw(lines);
 }
 

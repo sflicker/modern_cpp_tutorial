@@ -24,7 +24,8 @@ double G = 1;
 int XMAX = 800;
 int YMAX = 600;
 
-Body::Body(double mass, Vect2 position, Vect2 velocity, Vect2 force) : mass(mass), position(position), velocity(velocity), force(force) {};
+Body::Body(double mass, Vect2 position, Vect2 velocity, Vect2 force, sf::Color color, float radius) :
+    mass(mass), position(position), velocity(velocity), force(force), color(color), radius(radius) {};
 
 std::ostream& operator<<(std::ostream& os, const Vect2& v) {
     os << "[" << v.x << ", " << v.y << "]";
@@ -47,40 +48,63 @@ void computeForces(std::vector<Body> &bodies) {
     for (std::size_t i = 0; i < N; ++i) {
         for (std::size_t j = i + 1; j < N; ++j) {
             Vect2 d = bodies[j].position - bodies[i].position;
+            double r2 = d.x * d.x + d.y * d.y;
+            double r = sqrt(r2);
+
+            double soft = 1.0;
+            double inv_r3 = 1.0 / std::pow(r2+soft * soft, 1.5);
+
+            Vect2 F = G * bodies[i].mass * bodies[j].mass * inv_r3 * d;
+
+            bodies[i].force += F;
+            bodies[j].force -= F;
         }
     }
 }
 
-void update_display(GraphicsDisplay & display,
-    Body& body1,
-    Body& body2,
-    Trail & planet1_positions,
-    Trail & planet2_positions) {
+void integrate(std::vector<Body> &bodies, double dt) {
+    for (auto &body : bodies) {
+        Vect2 accel = body.force * (1.0 / body.mass);
+
+        body.velocity += accel * dt;
+        body.position += body.velocity * dt;
+        body.positions.addTrailPoint(Vect2(body.position.x + XMAX/2, body.position.y + YMAX/2));
+    }
+}
+
+void update_display(GraphicsDisplay & display, std::vector<Body> &bodies) {
     if (display.isOpen()) {
         display.pollEvents();
 
         display.clear();
 
-        display.drawCircle(XMAX/2-star_radius, YMAX/2-star_radius, star_radius, star_color);
-        Vect2 p1, p2;
-        if (planet1_positions.getVertexCount() > 2) {
-            display.drawLines(planet1_positions.getTrail());
-        }
-        display.drawCircle(
-            body1.position.x + XMAX/2 - planet_radius,
-            body1.position.y + YMAX/2 - planet_radius,
-            planet_radius,
-            planet_color);
-
-        if (planet2_positions.getVertexCount() > 2) {
-            display.drawLines(planet2_positions.getTrail());
+        for (const auto &body : bodies) {
+            display.drawCircle(body.position.x + XMAX/2-body.radius, body.position.y + YMAX/2-body.radius, body.radius, body.color);
+            if (body.positions.getVertexCount() > 2) {
+                display.drawLines(body.positions.getTrail());
+            }
         }
 
-        display.drawCircle(
-            body2.position.x + XMAX/2 - planet_radius,
-            body2.position.y + YMAX/2 - planet_radius,
-            planet_radius,
-            planet_color);
+        // display.drawCircle(XMAX/2-star_radius, YMAX/2-star_radius, star_radius, star_color);
+        // Vect2 p1, p2;
+        // if (planet1_positions.getVertexCount() > 2) {
+        //     display.drawLines(planet1_positions.getTrail());
+        // }
+        // display.drawCircle(
+        //     body1.position.x + XMAX/2 - planet_radius,
+        //     body1.position.y + YMAX/2 - planet_radius,
+        //     planet_radius,
+        //     planet_color);
+        //
+        // if (planet2_positions.getVertexCount() > 2) {
+        //     display.drawLines(planet2_positions.getTrail());
+        // }
+        //
+        // display.drawCircle(
+        //     body2.position.x + XMAX/2 - planet_radius,
+        //     body2.position.y + YMAX/2 - planet_radius,
+        //     planet_radius,
+        //     planet_color);
 
         display.display();
     }
@@ -91,7 +115,7 @@ int main() {
 
     GraphicsDisplay graphics_disp(XMAX, YMAX, "Orbits");
 
-    std::add_const<Body> bodies;
+    std::vector<Body> bodies;
 
 
     double R = 100.0;
@@ -102,62 +126,69 @@ int main() {
     int nSteps = 100000;
     int launchStep = 1000;
 
+    Body star(M, Vect2(0,0), Vect2(0,0), Vect2(0,0), star_color, 20);
+    Body planet1(m, Vect2(R, 0), Vect2(0, -sqrt(G*M/R) * 1.01) , Vect2(0,0), planet_color, 6);
+    Body planet2(3*m, Vect2(-R*2, 0), Vect2(0, sqrt(G*M/(R*2))), Vect2(0,0), planet_color, 6);
 
+    bodies.push_back(star);
+    bodies.push_back(planet1);
+    bodies.push_back(planet2);
 
-    Body star(M, Vect2(0,0), Vect2(0,0), Vect2(0,0));
-    Body planet1(m, Vect2(R, 0), Vect2(0, -sqrt(G*M/R) * 1.01) , Vect2(0,0));
-    Body planet2(m, Vect2(R*2, 0), Vect2(0, -sqrt(G*M/(R*2))), Vect2(0,0));
-
-    Trail planet1_positions;
-    Trail planet2_positions;
-
-    planet1_positions.addTrailPoint( Vect2(planet1.position.x + XMAX/2, planet1.position.y + YMAX/2), planet_color);
-    planet2_positions.addTrailPoint(Vect2(planet2.position.x + XMAX/2, planet2.position.y + YMAX/2), planet_color);
+    // Trail planet1_positions;
+    // Trail planet2_positions;
+    //
+    star.positions.addTrailPoint(Vect2(star.position.x + XMAX/2, star.position.y + YMAX/2));
+    planet1.positions.addTrailPoint( Vect2(planet1.position.x + XMAX/2, planet1.position.y + YMAX/2), planet_color);
+    planet2.positions.addTrailPoint(Vect2(planet2.position.x + XMAX/2, planet2.position.y + YMAX/2), planet_color);
 
     std::cout << planet1 << ", " << planet2 << std::endl;
-    update_display(graphics_disp, planet1, planet2, planet1_positions, planet2_positions);
+    update_display(graphics_disp, bodies /*planet1, planet2, planet1_positions, planet2_positions */);
     for (int n = 0; n < nSteps; n++) {
 
         if (n == launchStep) {
 
         }
 
-        // planet1
-        double r2 = planet1.position.x*planet1.position.x + planet1.position.y*planet1.position.y;
-        double r = sqrt(r2);
-        double inv_r3 = 1.0 / (r2 * r);
-        planet1.force.x = -G*M * inv_r3 * planet1.position.x;
-        planet1.force.y = -G*M * inv_r3 * planet1.position.y;
-
-        planet1.velocity.x += planet1.force.x * dt;
-        planet1.velocity.y += planet1.force.y * dt;
-
-        planet1.position.x += planet1.velocity.x * dt;
-        planet1.position.y += planet1.velocity.y * dt;
-        planet1_positions.addTrailPoint(Vect2(planet1.position.x + XMAX/2, planet1.position.y + YMAX/2), planet_color);
-
-        // planet2
-        r2 = planet2.position.x*planet2.position.x + planet2.position.y*planet2.position.y;
-        r = sqrt(r2);
-        inv_r3 = 1.0 / (r2 * r);
-        planet2.force.x = -G*M * inv_r3 * planet2.position.x;
-        planet2.force.y = -G*M * inv_r3 * planet2.position.y;
-
-        planet2.velocity.x += planet2.force.x * dt;
-        planet2.velocity.y += planet2.force.y * dt;
-
-        planet2.position.x += planet2.velocity.x * dt;
-        planet2.position.y += planet2.velocity.y * dt;
-
-        planet2_positions.addTrailPoint(Vect2(planet2.position.x + XMAX/2, planet2.position.y + YMAX/2), planet_color);
-
+        computeForces(bodies);
+        integrate(bodies, dt);
         t += dt;
+
+        // planet1
+        // double r2 = planet1.position.x*planet1.position.x + planet1.position.y*planet1.position.y;
+        // double r = sqrt(r2);
+        // double inv_r3 = 1.0 / (r2 * r);
+        // planet1.force.x = -G*M * inv_r3 * planet1.position.x;
+        // planet1.force.y = -G*M * inv_r3 * planet1.position.y;
+        //
+        // planet1.velocity.x += planet1.force.x * dt;
+        // planet1.velocity.y += planet1.force.y * dt;
+        //
+        // planet1.position.x += planet1.velocity.x * dt;
+        // planet1.position.y += planet1.velocity.y * dt;
+        // planet1_positions.addTrailPoint(Vect2(planet1.position.x + XMAX/2, planet1.position.y + YMAX/2), planet_color);
+        //
+        // // planet2
+        // r2 = planet2.position.x*planet2.position.x + planet2.position.y*planet2.position.y;
+        // r = sqrt(r2);
+        // inv_r3 = 1.0 / (r2 * r);
+        // planet2.force.x = -G*M * inv_r3 * planet2.position.x;
+        // planet2.force.y = -G*M * inv_r3 * planet2.position.y;
+        //
+        // planet2.velocity.x += planet2.force.x * dt;
+        // planet2.velocity.y += planet2.force.y * dt;
+        //
+        // planet2.position.x += planet2.velocity.x * dt;
+        // planet2.position.y += planet2.velocity.y * dt;
+        //
+        // planet2_positions.addTrailPoint(Vect2(planet2.position.x + XMAX/2, planet2.position.y + YMAX/2), planet_color);
+        //
+        // t += dt;
 
         if (n % 100 == 0) {
             std::cout << "time: " << t <<  ", planet: " << planet1 << std::endl;
         }
 
-        update_display(graphics_disp, planet1, planet2, planet1_positions, planet2_positions);
+        update_display(graphics_disp, bodies); //planet1, planet2, planet1_positions, planet2_positions);
 
 //        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

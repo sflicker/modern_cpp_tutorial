@@ -26,6 +26,6 @@ void Trail::addTrailPoint(const Vect2 & pos, sf::Color color) {
     }
 }
 
-int Trail::getVertexCount() { return _trail.getVertexCount(); }
+int Trail::getVertexCount() const { return _trail.getVertexCount(); }
 
-sf::VertexArray & Trail::getTrail() { return _trail; }
+const sf::VertexArray & Trail::getTrail() const { return _trail; }

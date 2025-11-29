@@ -18,8 +18,8 @@ class Trail {
 
 public:
     void addTrailPoint(const Vect2 &position, sf::Color color = sf::Color::White);
-    int getVertexCount();
-    sf::VertexArray &getTrail();
+    int getVertexCount() const;
+    const sf::VertexArray &getTrail() const;
 };
 
 #endif //MODERN_TUTOR_TRAIL_HPP
