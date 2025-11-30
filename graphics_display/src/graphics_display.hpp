@@ -20,6 +20,8 @@ class GraphicsDisplay {
         bool isOpen();
         bool pollEvents();
 
+        void setView(sf::View & view);
+
     private:
         sf::RenderWindow mWindow;
 

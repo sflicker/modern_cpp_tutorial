@@ -12,8 +12,8 @@
 class Trail {
     sf::VertexArray _trail;
     Vect2 last_point;
-    double min_delta;
-    std::size_t max_points;
+    double min_delta = 1;
+    std::size_t max_points = 500;
     sf::Color color;
 
 public:

@@ -45,3 +45,7 @@ bool GraphicsDisplay::pollEvents() {
     }
     return mWindow.isOpen();
 }
+
+void GraphicsDisplay::setView(sf::View & view) {
+    mWindow.setView(view);
+}
