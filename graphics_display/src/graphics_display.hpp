@@ -24,7 +24,7 @@ class GraphicsDisplay {
 
     private:
         sf::RenderWindow mWindow;
-
+        sf::Font mFont;
 };
 
 #endif //MODERN_TUTOR_GRAPHICS_DISPLAY_HPP

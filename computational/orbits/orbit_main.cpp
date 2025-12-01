@@ -19,6 +19,8 @@ sf::Color star_color = sf::Color::Yellow;
 int star_radius = 20;
 int planet_radius = 6;
 
+
+
 double G = 1;
 
 int XMAX = 800;
@@ -192,10 +194,6 @@ int main() {
             }
 
             float panSpeed = 0.1f;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) view.move(-panSpeed, 0.f);
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) view.move(panSpeed, 0.f);
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) view.move(0.f, -panSpeed);
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) view.move(0.f, panSpeed);
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) trackedIndex = 0;
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) trackedIndex = 1;
@@ -209,6 +207,12 @@ int main() {
             else if (trackedIndex > 0 && trackedIndex <= bodies.size()) {
                 view.setCenter(bodies[trackedIndex - 1].position.x, bodies[trackedIndex - 1].position.y);
             }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) view.move(-panSpeed, 0.f);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) view.move(panSpeed, 0.f);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) view.move(0.f, -panSpeed);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) view.move(0.f, panSpeed);
+
             graphics_disp.setView(view);
 
             if (n == launchStep) {

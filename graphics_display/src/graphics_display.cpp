@@ -4,7 +4,12 @@
 
 #include "graphics_display.hpp"
 
-GraphicsDisplay::GraphicsDisplay(int width, int height, const std::string &title) : mWindow(sf::VideoMode(width, height), title) {}
+GraphicsDisplay::GraphicsDisplay(int width, int height, const std::string &title) : mWindow(sf::VideoMode(width, height), title) {
+    if (!mFont.loadFromFile("/home/scott/FreeSans.ttf")) {
+        exit(1);
+    }
+
+}
 
 void GraphicsDisplay::clear() { mWindow.clear(); }
 
