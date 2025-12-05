@@ -54,3 +54,20 @@ bool GraphicsDisplay::pollEvents() {
 void GraphicsDisplay::setView(sf::View & view) {
     mWindow.setView(view);
 }
+
+void GraphicsDisplay::drawText(float x, float y, const std::string text) {
+
+    sf::View oldview = mWindow.getView();
+
+    mWindow.setView(mWindow.getDefaultView());
+
+    sf::Text textObj;
+    textObj.setFont(mFont);
+    textObj.setString(text);
+    textObj.setPosition(x, y);
+    textObj.setFillColor(sf::Color::White);
+    textObj.setCharacterSize(20);
+    mWindow.draw(textObj);
+
+    mWindow.setView(oldview);
+}

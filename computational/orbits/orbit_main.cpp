@@ -8,6 +8,7 @@
 #include <iostream>
 #include <bits/this_thread_sleep.h>
 #include <SFML/Graphics/Color.hpp>
+#include <fmt/core.h>
 
 #include "../../graphics_display/src/graphics_display.hpp"
 
@@ -87,11 +88,14 @@ void integrate(std::vector<Body> &bodies, double dt) {
     }
 }
 
-void update_display(GraphicsDisplay & display, std::vector<Body> &bodies) {
+void update_display(GraphicsDisplay & display, std::vector<Body> &bodies, double time) {
     // if (display.isOpen()) {
     //     display.pollEvents();
 
         display.clear();
+
+        std::string time_str = fmt::format("Time: {:.3f}", time);
+        display.drawText(0, 0, time_str);
 
         for (const auto &body : bodies) {
 //            display.drawCircle(body.position.x + XMAX/2-body.radius, body.position.y + YMAX/2-body.radius, body.radius, body.color);
@@ -174,7 +178,7 @@ int main() {
     planet3.positions.addTrailPoint(Vect2(planet3.position.x, planet3.position.y), planet_color);
 
     std::cout << planet1 << ", " << planet2 << std::endl;
-    update_display(graphics_disp, bodies /*planet1, planet2, planet1_positions, planet2_positions */);
+    update_display(graphics_disp, bodies, t /*planet1, planet2, planet1_positions, planet2_positions */);
 
     int trackedIndex = 0;
 
@@ -258,7 +262,7 @@ int main() {
                 std::cout << "time: " << t <<  ", planet: " << bodies[1] << std::endl;
             }
 
-            update_display(graphics_disp, bodies); //planet1, planet2, planet1_positions, planet2_positions);
+            update_display(graphics_disp, bodies, t); //planet1, planet2, planet1_positions, planet2_positions);
         }
 //        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

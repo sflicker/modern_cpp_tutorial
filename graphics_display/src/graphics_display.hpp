@@ -16,6 +16,7 @@ class GraphicsDisplay {
         void drawRect(float x, float y, float width, float height, sf::Color color);
         void drawLine(float x1, float y1, float x2, float y2, float y, sf::Color color);
         void drawLines(const sf::VertexArray & lines);
+        void drawText(float x, float y, const std::string text);
         void display();
         bool isOpen();
         bool pollEvents();
