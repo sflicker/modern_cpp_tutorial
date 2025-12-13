@@ -29,3 +29,11 @@ void Trail::addTrailPoint(const Vect2 & pos, sf::Color color) {
 int Trail::getVertexCount() const { return _trail.getVertexCount(); }
 
 const sf::VertexArray & Trail::getTrail() const { return _trail; }
+
+void Trail::setMaxPoints(std::size_t _max_points) {
+    max_points = _max_points;
+}
+
+void Trail::clear() {
+    _trail.clear();
+}

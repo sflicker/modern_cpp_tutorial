@@ -16,6 +16,8 @@ struct Body {
     Vect2 position;
     Vect2 velocity;
     Vect2 force;
+    double kinetic_energy;
+    double potential_energy;
     sf::Color color;
     float radius;
     Trail positions;

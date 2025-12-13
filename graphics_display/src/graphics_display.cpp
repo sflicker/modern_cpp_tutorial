@@ -8,7 +8,7 @@ GraphicsDisplay::GraphicsDisplay(int width, int height, const std::string &title
     if (!mFont.loadFromFile("/home/scott/FreeSans.ttf")) {
         exit(1);
     }
-
+    mWindow.setFramerateLimit(60);
 }
 
 void GraphicsDisplay::clear() { mWindow.clear(); }
@@ -70,4 +70,33 @@ void GraphicsDisplay::drawText(float x, float y, const std::string text) {
     mWindow.draw(textObj);
 
     mWindow.setView(oldview);
+}
+
+void GraphicsDisplay::drawCrosshairAtWorld(float x, float y) {
+
+    sf::View worldView = mWindow.getView();
+    sf::Vector2i px = mWindow.mapCoordsToPixel(sf::Vector2f(x, y), worldView);
+
+    mWindow.setView(mWindow.getDefaultView());
+
+    float length = 14.f;
+    float thickness = 2.f;
+
+    sf::Vector2f center2f((float)px.x, (float)px.y);
+
+    sf::RectangleShape horiz({length * 2, thickness});
+    horiz.setOrigin(length, thickness/2);
+    horiz.setPosition(center2f);
+    horiz.setFillColor(sf::Color::Red);
+
+    sf::RectangleShape vert({thickness, length * 2});
+    vert.setOrigin(thickness/2, length);
+    vert.setPosition(center2f);
+    vert.setFillColor(sf::Color::Red);
+
+    mWindow.draw(horiz);
+    mWindow.draw(vert);
+
+    mWindow.setView(worldView);
+
 }
