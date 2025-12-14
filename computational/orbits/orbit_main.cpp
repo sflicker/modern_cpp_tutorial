@@ -154,6 +154,20 @@ void update_display(GraphicsDisplay & display, std::vector<Body> &bodies, double
 //    }
 }
 
+
+void update_info(GraphicsDisplay & infoWindow, std::vector<Body> &bodies, double time, bool activeSimulation) {
+
+    infoWindow.clear();
+    int count = 0;
+    for (auto &body : bodies) {
+        std::string body_str = fmt::format("Body - {:d}, KE: {:.3f}, PE: {:.3f}",
+            count, body.kinetic_energy, body.potential_energy);
+        infoWindow.drawText(0, count*30, body_str);
+        count++;
+    }
+    infoWindow.display();
+}
+
 void setupSimulationBodies(std::vector<Body> &bodies) {
 
     double R = 100.0;
@@ -247,34 +261,35 @@ void setupSimulationBodies(std::vector<Body> &bodies) {
 }
 
 void bounceBodiesOnTheEdge(std::vector<Body> & bodies, double dt) {
-    return;  // skip for now
-    for (int i = 2; i < bodies.size(); i++) {
+    for (int i = bodies.size() - 1; i >= 0; --i) {
         double distanceToCenter = center.dist(bodies[i].position);
         if (distanceToCenter > boundary) {
-            Body & body = bodies[i];
-            std::cout << "Simulation Object " << i << " Crossed the outer edge with distance "
-                    << distanceToCenter << ". Bouncing it back" << std::endl;;
-
-            // reverse velocities
-            bodies[i].velocity.x = -bodies[i].velocity.x;
-            bodies[i].velocity.y = -bodies[i].velocity.y;
-
-            // jump 100 time steps with reverse velocities to avoid bunching again
-            bodies[i].position.x += 100*dt*bodies[i].velocity.x;
-            bodies[i].position.y += 100*dt*bodies[i].velocity.y;
-
-            // scale velocities
-            bodies[i].velocity.x *= 0.1;
-            bodies[i].velocity.y *= 0.1;
-
-            //bodies[i].positions.clear();
-
-            // reset forces on body
-            bodies[i].force.x = 0;
-            bodies[i].force.y = 0;
-
-            double newDistance = center.dist(bodies[i].position);
-            std::cout << "New distance = " << newDistance << std::endl;
+            std::cout << "Removing body " << i << " from simulation" << std::endl;
+            bodies.erase(bodies.begin() + i);
+            // Body & body = bodies[i];
+            // std::cout << "Simulation Object " << i << " Crossed the outer edge with distance "
+            //         << distanceToCenter << ". Bouncing it back" << std::endl;;
+            //
+            // // reverse velocities
+            // bodies[i].velocity.x = -bodies[i].velocity.x;
+            // bodies[i].velocity.y = -bodies[i].velocity.y;
+            //
+            // // jump 100 time steps with reverse velocities to avoid bunching again
+            // bodies[i].position.x += 100*dt*bodies[i].velocity.x;
+            // bodies[i].position.y += 100*dt*bodies[i].velocity.y;
+            //
+            // // scale velocities
+            // bodies[i].velocity.x *= 0.1;
+            // bodies[i].velocity.y *= 0.1;
+            //
+            // //bodies[i].positions.clear();
+            //
+            // // reset forces on body
+            // bodies[i].force.x = 0;
+            // bodies[i].force.y = 0;
+            //
+            // double newDistance = center.dist(bodies[i].position);
+            // std::cout << "New distance = " << newDistance << std::endl;
         }
     }
 }
@@ -284,6 +299,7 @@ int main() {
     std::cout << "Starting Orbits!\n";
 
     GraphicsDisplay graphics_disp(XMAX, YMAX, "Orbits");
+    GraphicsDisplay infoWindow(600, 800, "Simulation Objects");
 
     std::vector<Body> bodies;
 
@@ -311,7 +327,21 @@ int main() {
     int trackedIndex = 0;
 
 
-    while (true) {
+    while (infoWindow.isOpen() && graphics_disp.isOpen()) {
+
+        sf::Event event;
+
+        while (infoWindow.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                infoWindow.close();
+            }
+        }
+
+        while (graphics_disp.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                graphics_disp.close();
+            }
+        }
 
         if (graphics_disp.isOpen()) {
             graphics_disp.pollEvents();
@@ -377,6 +407,7 @@ int main() {
             // redraw every 1/60 of a second (16.666667 ms) based on current simulation coordinates.
             if (simStepTimer.getElapsedTime().asMilliseconds() >= 16.66667f) {
                 update_display(graphics_disp, bodies, t, activeSimulation); //planet1, planet2, planet1_positions, planet2_positions);
+                update_info(infoWindow, bodies, t, activeSimulation);
                 simStepCount = 0;
                 simStepTimer.restart();
             }

@@ -21,6 +21,8 @@ class GraphicsDisplay {
         void display();
         bool isOpen();
         bool pollEvents();
+        bool pollEvent(sf::Event & event);
+        void close();
 
         void setView(sf::View & view);
 

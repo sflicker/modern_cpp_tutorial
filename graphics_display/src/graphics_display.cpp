@@ -100,3 +100,9 @@ void GraphicsDisplay::drawCrosshairAtWorld(float x, float y) {
     mWindow.setView(worldView);
 
 }
+
+bool GraphicsDisplay::pollEvent(sf::Event & event) {
+    mWindow.pollEvent(event);
+}
+
+void GraphicsDisplay::close() { mWindow.close(); }
