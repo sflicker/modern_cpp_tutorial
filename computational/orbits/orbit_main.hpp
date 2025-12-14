@@ -10,21 +10,9 @@
 #include "Trail.hpp"
 
 #include "Vect2.hpp"
+#include "SimulationBody.hpp"
 
-struct Body {
-    double mass;
-    Vect2 position;
-    Vect2 velocity;
-    Vect2 force;
-    double kinetic_energy;
-    double potential_energy;
-    sf::Color color;
-    float radius;
-    Trail positions;
-//    Body(double mass, Vect2 &position, Vect2 &velocity, Vect2 &force, sf::Color & color, float radius);
 
-    Body(double mass, Vect2 vect2, Vect2 vect3, Vect2 vect4, sf::Color color, float radius);;
-};
 
 // struct Trail {
 //     sf::VertexArray _trail;
@@ -39,7 +27,7 @@ struct Body {
 class OrbitMain {
 };
 
-double calculate_distance(Body &a, Body &b);
-Vect2 calculate_forces_on_body(Body &a, Body &b);
+double calculate_distance(SimulationBody &a, SimulationBody &b);
+Vect2 calculate_forces_on_body(SimulationBody &a, SimulationBody &b);
 
 #endif //MODERN_TUTOR_ORBIT_MAIN_HPP

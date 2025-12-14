@@ -6,6 +6,7 @@
 #define MODERN_TUTOR_VECT2_HPP
 
 #include <cmath>
+#include <iostream>
 
 struct Vect2 {
     double x = 0.f;
@@ -70,5 +71,7 @@ struct Vect2 {
         return sqrt(dx*dx + dy*dy);
     }
 };
+
+std::ostream& operator<<(std::ostream& os, const Vect2& v);
 
 #endif //MODERN_TUTOR_VECT2_HPP

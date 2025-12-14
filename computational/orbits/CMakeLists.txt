@@ -1,4 +1,4 @@
-add_executable(orbit_main orbit_main.cpp Trail.cpp Vect2.cpp)
+add_executable(orbit_main orbit_main.cpp Trail.cpp Vect2.cpp SimulationBody.cpp SimulationState.cpp)
 target_link_libraries(orbit_main PRIVATE graphics_display)
 
 find_package(fmt REQUIRED)
