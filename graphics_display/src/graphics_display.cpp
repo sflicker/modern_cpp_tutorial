@@ -102,7 +102,7 @@ void GraphicsDisplay::drawCrosshairAtWorld(float x, float y) {
 }
 
 bool GraphicsDisplay::pollEvent(sf::Event & event) {
-    mWindow.pollEvent(event);
+    return mWindow.pollEvent(event);
 }
 
 void GraphicsDisplay::close() { mWindow.close(); }

@@ -19,11 +19,24 @@ struct SimulationBody {
     double kinetic_energy;
     double potential_energy;
     sf::Color color;
-    float radius;
+    float drawRadius;
     Trail positions;
     //    Body(double mass, Vect2 &position, Vect2 &velocity, Vect2 &force, sf::Color & color, float radius);
 
-    SimulationBody(std::string name, double mass, Vect2 vect2, Vect2 vect3, Vect2 vect4, sf::Color color, float radius);;
+    SimulationBody()
+  : name("")
+  , mass(0.0)
+  , position{0,0}
+    , velocity{0,0}
+    , force{0,0}
+    , kinetic_energy(0.0)
+    , potential_energy(0.0)
+    , color(sf::Color::White)
+    , drawRadius(3.0f)
+    , positions() {};
+
+    SimulationBody(std::string name, double mass, Vect2 position, Vect2 velocity, Vect2 force,
+    double kinetic_energy, double potential_energy, sf::Color color, float radius);
 };
 
 std::ostream& operator<<(std::ostream & os, const SimulationBody &b);
