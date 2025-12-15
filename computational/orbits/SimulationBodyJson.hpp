@@ -46,7 +46,7 @@ inline void from_json(const json& j, SimulationBody& b) {
     if (!c.is_array() || c.size() != 4) throw std::runtime_error("color must be [r,g,b,a]");
     b.color.r = c.at(0).get<std::uint8_t>();
     b.color.g = c.at(1).get<std::uint8_t>();
-    b.color.g = c.at(2).get<std::uint8_t>();
+    b.color.b = c.at(2).get<std::uint8_t>();
     b.color.a = c.at(3).get<std::uint8_t>();
 }
 
@@ -54,7 +54,12 @@ inline void from_json(const json& j, SimulationBody& b) {
 inline void saveSimulation(const SimulationState & sim, const std::string& path) {
     json j;
     j["version"] = 1;
-    j["globals"] = {{ "G", sim.G}, {"t", sim.t}, {"dt", sim.dt}};
+    j["globals"] = {{ "G", sim.G},
+        {"t", sim.t},
+        {"dt", sim.dt}};
+
+    j["activeSimulation"] = sim.activeSimulation;
+    j["boundary"] = sim.boundary;
     j["bodies"] = sim.bodies;
 
     std::ofstream out(path);
@@ -77,6 +82,9 @@ inline SimulationState loadSimulation(const std::string& path) {
     sim.G = g.value("G", sim.G);
     sim.t = g.value("t", 0.0);
     sim.dt = g.value("dt", sim.dt);
+
+    sim.activeSimulation = j.at("activeSimulation");
+    sim.boundary = j.at("boundary");
 
     sim.bodies = j.at("bodies").get<std::vector<SimulationBody>>();
     return sim;

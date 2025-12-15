@@ -136,7 +136,7 @@ void update_display(GraphicsDisplay & display, SimulationState & sim) {
 
         if (!sim.activeSimulation) {
             std::string paused_str = "Paused";
-            display.drawText(0, 0, paused_str);
+            display.drawText(XMAX-100, 0, paused_str);
         }
 
         // std::string steps_per_sec_str = fmt::format("StepsPerSecond: {:d}", simStepCountPrev);
@@ -190,7 +190,7 @@ void setupSimulationBodies(SimulationState & sim) {
     r = R; m = m0;
     SimulationBody planet3("Earth", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Earth, 10);
 
-    r = 1.6 * R; m = .01 *m0;
+    r = 1.5 * R; m = .01 *m0;
     SimulationBody planet4("Mars", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Mars, 10);
 
     r = 2.8 * R; m = .01 * m0;
@@ -200,22 +200,26 @@ void setupSimulationBodies(SimulationState & sim) {
     SimulationBody asteroid4("Asteroid4", m, Vect2(0, -r), Vect2(-sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Asteroid, 10);
 
     r = 5.2 * R; m = 100 * m0;
-    SimulationBody planet5("Jupiter", m, Vect2(-r, 0), Vect2(0, 0.95*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Jupiter, 25);
+    SimulationBody planet5("Jupiter", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Jupiter, 25);
 //    planet5.positions.setMaxPoints(1000);
 
     r = 9.0 * R; m = 50 * m0;
     SimulationBody planet6("Saturn", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Saturn, 20);
 //    planet6.positions.setMaxPoints(1000);
 
-    r = 15.0 * R; m = 10 * m0;
-    SimulationBody planet7("Neptune", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Neptune, 20);
+    r = 19.0 * R; m = 10 * m0;
+    SimulationBody planet7("Uranus", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Uranus, 20);
 //    planet7.positions.setMaxPoints(1000);
 
-    r = 35.0 * R; m = 0.01 * m0;
+    r = 30.0 * R; m = 10 * m0;
+    SimulationBody planet8("Neptune", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Neptune, 20);
+
+
+    r = 40.0 * R; m = 0.01 * m0;
     SimulationBody comet1("Comet1", m, Vect2(-r, 0), Vect2(0, 0.15*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10);
     comet1.positions.setMaxPoints(1000);
 
-    r = 25.0 * R; m = 0.01 * m0;
+    r = 35.0 * R; m = 0.01 * m0;
     SimulationBody comet2("Comet2", m, Vect2(r, 0), Vect2(0, -0.2*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10);
     comet2.positions.setMaxPoints(1000);
     SimulationBody comet3("Comet3", m, Vect2(0, r), Vect2(-0.1*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10);
@@ -257,6 +261,7 @@ void setupSimulationBodies(SimulationState & sim) {
     sim.bodies.push_back(planet5);
     sim.bodies.push_back(planet6);
     sim.bodies.push_back(planet7);
+    sim.bodies.push_back(planet8);
     sim.bodies.push_back(comet1);
     sim.bodies.push_back(comet2);
     sim.bodies.push_back(comet3);
@@ -323,7 +328,7 @@ int main() {
 
    // int nSteps = 1000000;
     int launchStep = 1000;
-    bool activeSimulation = true;
+    sim.activeSimulation = true;
 
     std::size_t simStepCount = 0;
     sf::Clock simStepTimer;
@@ -357,6 +362,10 @@ int main() {
             if (event.type == sf::Event::Closed) {
                 graphics_disp.close();
             }
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::P) {
+                sim.activeSimulation = !(sim.activeSimulation);       // pause key
+            }
+
         }
 
         if (graphics_disp.isOpen() && graphics_disp.pollEvents()) {
@@ -365,9 +374,6 @@ int main() {
                 exit(0);
             }
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
-                activeSimulation = !activeSimulation;       // pause key
-            }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
                 saveSimulation(sim, "savesim.json");
@@ -417,7 +423,7 @@ int main() {
             //
             // }
 
-            if (activeSimulation) {
+            if (sim.activeSimulation) {
                 //computeForces(bodies);
                 bounceBodiesOnTheEdge(sim);
                 integrate(sim);
