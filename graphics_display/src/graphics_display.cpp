@@ -72,6 +72,12 @@ void GraphicsDisplay::drawText(float x, float y, const std::string text) {
     mWindow.setView(oldview);
 }
 
+sf::Vector2i GraphicsDisplay::mapCoordsToPixel(float x, float y) {
+    sf::View worldView = mWindow.getView();
+    sf::Vector2i px = mWindow.mapCoordsToPixel(sf::Vector2f(x, y), worldView);
+    return px;
+}
+
 void GraphicsDisplay::drawCrosshairAtWorld(float x, float y) {
 
     sf::View worldView = mWindow.getView();

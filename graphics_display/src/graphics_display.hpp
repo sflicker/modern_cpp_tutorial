@@ -23,6 +23,7 @@ class GraphicsDisplay {
         bool pollEvents();
         bool pollEvent(sf::Event & event);
         void close();
+        sf::Vector2i mapCoordsToPixel(float x, float y);
 
         void setView(sf::View & view);
 

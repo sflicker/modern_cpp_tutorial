@@ -10,6 +10,7 @@
 #include <bits/this_thread_sleep.h>
 #include <SFML/Graphics/Color.hpp>
 #include <fmt/core.h>
+#include <limits>
 
 #include <nlohmann/json.hpp>
 
@@ -26,7 +27,6 @@ using json = nlohmann::json;
 // sf::Color planet_color = sf::Color::Blue;
 // sf::Color STAR_COLOR = sf::Color(255, 230, 160);     // bright yellow white
 // sf::Color MERCURY_COLOR = sf::Color(140, 140, 140);   // dark grey
-
 
 int star_radius = 20;
 int planet_radius = 6;
@@ -48,6 +48,8 @@ void computeForces(SimulationState & sim) {
     for (auto &body : sim.bodies) {
         body.force = Vect2(0.f, 0.f);
         body.potential_energy = 0.0;
+        body.nearest_star = INVALID_BODY_ID;
+        body.nearest_star_dist = std::numeric_limits<double>::max();
     }
 
     double totalPotential = 0.0;
@@ -59,6 +61,12 @@ void computeForces(SimulationState & sim) {
             Vect2 d = sim.bodies[j].position - sim.bodies[i].position;
             double r2 = d.x * d.x + d.y * d.y + soft2;
             double r = sqrt(r2);
+            if (sim.bodies[i].isStar && !sim.bodies[j].isStar) {
+                if (r < sim.bodies[j].nearest_star_dist) {
+                    sim.bodies[j].nearest_star_dist = r;
+                    sim.bodies[j].nearest_star = sim.bodies[i].id;
+                }
+            }
             // if (r < 1 || r > 10000) {
             //     std::cout << "r: " << r << ", i: " << i << ", j: " << j << std::endl;
             // }
@@ -145,6 +153,10 @@ void update_display(GraphicsDisplay & display, SimulationState & sim) {
 
         for (const auto &body : sim.bodies) {
             display.drawCircle(body.position.x - body.drawRadius, body.position.y - body.drawRadius, body.drawRadius, body.color);
+            if (body.showLabel) {
+                sf::Vector2i px = display.mapCoordsToPixel(body.position.x, body.position.y);
+                display.drawText(px.x, px.y, body.name);
+            }
             if (body.positions.getVertexCount() > 2) {
                  display.drawLines(body.positions.getTrail());
             }
@@ -160,8 +172,12 @@ void update_info(GraphicsDisplay & infoWindow, SimulationState & sim) {
     infoWindow.clear();
     int count = 0;
     for (auto &body : sim.bodies) {
-        std::string body_str = fmt::format("Body - {}, KE: {:.3f}, PE: {:.3f}, E: {:3f}",
-            body.name, body.kinetic_energy, body.potential_energy, (body.kinetic_energy+body.potential_energy));
+        double total_energy = body.kinetic_energy+body.potential_energy;
+        SimulationBody * nearest_star = get_body_by_id(sim.bodies, body.nearest_star);
+        std::string nearest_star_name = nearest_star != nullptr ? nearest_star->name : "";
+        std::string body_str = fmt::format("Body - {}, KE: {:.3f}, PE: {:.3f}, E: {:.3f}, STAR: {}, DIST: {:.3f}",
+            body.name, body.kinetic_energy, body.potential_energy, total_energy,
+            nearest_star_name, body.nearest_star_dist);
         infoWindow.drawText(0, count*30, body_str);
         count++;
     }
@@ -178,74 +194,77 @@ void setupSimulationBodies(SimulationState & sim) {
 
     center = Vect2(0.0, 0.0);
 
-    SimulationBody star("Sun", M, Vect2(0,0), Vect2(0, 0 /*-sqrt(G*M/(r))*/ ), Vect2(0,0), 0, 0, Colors::Star, 40);
+    SimulationBody star(allocateId(), "Sun", M, Vect2(0,0), Vect2(0, 0 /*-sqrt(G*M/(r))*/ ), Vect2(0,0), 0, 0, Colors::Star, 40, false, true);
 //    star.positions.setMaxPoints(2500);
 
     r = 0.4*R; double m = 0.55 * m0;
-    SimulationBody planet1("Mercury", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/r)) , Vect2(0,0), 0, 0, Colors::Mercury, 10);
+    SimulationBody planet1(allocateId(), "Mercury", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/r)) , Vect2(0,0), 0, 0, Colors::Mercury, 10, false, false);
 
     r = 0.7*R; m = 0.815 * m0;
-    SimulationBody planet2("Venus", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Venus, 10);
+    SimulationBody planet2(allocateId(), "Venus", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Venus, 10, false, false);
 
     r = R; m = m0;
-    SimulationBody planet3("Earth", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Earth, 10);
+    SimulationBody planet3(allocateId(), "Earth", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Earth, 10, false, false);
 
     r = 1.5 * R; m = .01 *m0;
-    SimulationBody planet4("Mars", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Mars, 10);
+    SimulationBody planet4(allocateId(), "Mars", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Mars, 10, false, false);
 
     r = 2.8 * R; m = .01 * m0;
-    SimulationBody asteroid1("Asteroid1", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Asteroid, 10);
-    SimulationBody asteroid2("Asteroid2", m, Vect2(0, r), Vect2(sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Asteroid, 10);
-    SimulationBody asteroid3("Asteroid3", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Asteroid, 10);
-    SimulationBody asteroid4("Asteroid4", m, Vect2(0, -r), Vect2(-sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Asteroid, 10);
+    SimulationBody asteroid1(allocateId(), "Asteroid1", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Asteroid, 10, false, false);
+    SimulationBody asteroid2(allocateId(), "Asteroid2", m, Vect2(0, r), Vect2(sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Asteroid, 10, false, false);
+    SimulationBody asteroid3(allocateId(), "Asteroid3", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Asteroid, 10, false, false);
+    SimulationBody asteroid4(allocateId(), "Asteroid4", m, Vect2(0, -r), Vect2(-sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Asteroid, 10, false, false);
 
     r = 5.2 * R; m = 100 * m0;
-    SimulationBody planet5("Jupiter", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Jupiter, 25);
-//    planet5.positions.setMaxPoints(1000);
+    SimulationBody planet5(allocateId(), "Jupiter", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Jupiter, 25, false, false);
+    planet5.positions.setMaxPoints(1000);
 
     r = 9.0 * R; m = 50 * m0;
-    SimulationBody planet6("Saturn", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Saturn, 20);
-//    planet6.positions.setMaxPoints(1000);
+    SimulationBody planet6(allocateId(), "Saturn", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Saturn, 20, false, false);
+    planet6.positions.setMaxPoints(1000);
 
     r = 19.0 * R; m = 10 * m0;
-    SimulationBody planet7("Uranus", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Uranus, 20);
-//    planet7.positions.setMaxPoints(1000);
+    SimulationBody planet7(allocateId(), "Uranus", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Uranus, 20, false, false);
+    planet7.positions.setMaxPoints(1000);
 
     r = 30.0 * R; m = 10 * m0;
-    SimulationBody planet8("Neptune", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Neptune, 20);
+    SimulationBody planet8(allocateId(), "Neptune", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Neptune, 20, false, false);
+    planet8.positions.setMaxPoints(1000);
 
 
     r = 40.0 * R; m = 0.01 * m0;
-    SimulationBody comet1("Comet1", m, Vect2(-r, 0), Vect2(0, 0.15*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10);
+    SimulationBody comet1(allocateId(), "Comet1", m, Vect2(-r, 0), Vect2(0, 0.15*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet1.positions.setMaxPoints(1000);
 
     r = 35.0 * R; m = 0.01 * m0;
-    SimulationBody comet2("Comet2", m, Vect2(r, 0), Vect2(0, -0.2*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10);
+    SimulationBody comet2(allocateId(), "Comet2", m, Vect2(r, 0), Vect2(0, -0.2*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet2.positions.setMaxPoints(1000);
-    SimulationBody comet3("Comet3", m, Vect2(0, r), Vect2(-0.1*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10);
+    SimulationBody comet3(allocateId(), "Comet3", m, Vect2(0, r), Vect2(-0.1*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet3.positions.setMaxPoints(1000);
-    SimulationBody comet4("Comet4", m, Vect2(0, -r), Vect2(0.05*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10);
+    SimulationBody comet4(allocateId(), "Comet4", m, Vect2(0, -r), Vect2(0.05*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet4.positions.setMaxPoints(1000);
 
     r = 100.0 * R; m = M;
-    SimulationBody star2("Sirius", M, Vect2(-r, 0), Vect2(0, 0.8*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Star, 40);
+    SimulationBody star2(allocateId(), "Sirius", M, Vect2(-r, 0), Vect2(0, 0.8*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Star, 40, false, true);
 //    star2.positions.setMaxPoints(2500);
 
     double r2 = r + 100;
     m = 0.3*m0;
-    SimulationBody planet10("PlanetX", m0, Vect2(-r2, 0), Vect2(0, sqrt(sim.G*M/(100))), Vect2(0, 0), 0, 0, Colors::Mercury, 10);
+    SimulationBody planet10(allocateId(), "PlanetX", m0, Vect2(-r2, 0), Vect2(0, sqrt(sim.G*M/(100))), Vect2(0, 0), 0, 0, Colors::Mercury, 10, false, false);
 
     r2 = r + 200;
     m = m0;
-    SimulationBody planet11("PlanetY", m0, Vect2(-r2, 0), Vect2(0, sqrt(sim.G*M/(200))), Vect2(0, 0), 0, 0, Colors::Earth, 10);
+    SimulationBody planet11(allocateId(), "PlanetY", m0, Vect2(-r2, 0), Vect2(0, sqrt(sim.G*M/(200))), Vect2(0, 0), 0, 0, Colors::Earth, 10, false, false);
 
     m = 10*m0;
     r2 = r + 400;
-    SimulationBody planet12("PlanetZ", m0, Vect2(-r2, 0), Vect2(0, sqrt(sim.G*M/(400))), Vect2(0, 0), 0, 0, Colors::Jupiter, 20);
+    SimulationBody planet12(allocateId(), "PlanetZ", m0, Vect2(-r2, 0), Vect2(0, sqrt(sim.G*M/(400))), Vect2(0, 0), 0, 0, Colors::Jupiter, 20, false, false);
+    planet12.positions.setMaxPoints(1000);
 
     r2 = r + 1200;
     m = 0.01*m0;
-    SimulationBody comet5("Comet5", m, Vect2(-r2, 0), Vect2(0, sqrt(0.2*sim.G*M/(1200))), Vect2(0, 0), 0, 0, Colors::Comet, 10);
+    SimulationBody comet5(allocateId(), "Comet5", m, Vect2(-r2, 0), Vect2(0, sqrt(0.2*sim.G*M/(1200))), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    comet5.positions.setMaxPoints(1000);
 
     sim.bodies.push_back(star);
     sim.bodies.push_back(star2);
@@ -283,6 +302,17 @@ void setupSimulationBodies(SimulationState & sim) {
 void bounceBodiesOnTheEdge(SimulationState & sim) {
     for (int i = sim.bodies.size() - 1; i >= 0; --i) {
         double distanceToCenter = center.dist(sim.bodies[i].position);
+        // show label near the edge
+
+        if (!sim.bodies[i].isStar && sim.bodies[i].nearest_star_dist > 500) {
+            sim.bodies[i].showLabel = true;
+        }
+
+        if (distanceToCenter > 0.75*sim.boundary) {
+            sim.bodies[i].showLabel = true;
+        }
+
+        // remove body if it goes past the boundary
         if (distanceToCenter > sim.boundary) {
             std::cout << "Removing body " << sim.bodies[i].name << " from simulation" << std::endl;
             sim.bodies.erase(sim.bodies.begin() + i);
@@ -319,7 +349,7 @@ int main() {
     std::cout << "Starting Orbits!\n";
 
     GraphicsDisplay graphics_disp(XMAX, YMAX, "Orbits");
-    GraphicsDisplay infoWindow(600, 800, "Simulation Objects");
+    GraphicsDisplay infoWindow(800, 800, "Simulation Objects");
 
     SimulationState sim;
     sim.t = 0;
@@ -425,8 +455,8 @@ int main() {
 
             if (sim.activeSimulation) {
                 //computeForces(bodies);
-                bounceBodiesOnTheEdge(sim);
                 integrate(sim);
+                bounceBodiesOnTheEdge(sim);
                 simStepCount++;
                 sim.t += sim.dt;
             }
