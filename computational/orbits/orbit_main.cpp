@@ -241,10 +241,10 @@ void setupSimulationBodies(SimulationState & sim) {
     comet2.positions.setMaxPoints(1000);
     SimulationBody comet3(allocateId(), "Comet3", m, Vect2(0, r), Vect2(-0.1*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet3.positions.setMaxPoints(1000);
-    SimulationBody comet4(allocateId(), "Comet4", m, Vect2(0, -r), Vect2(0.05*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
+    SimulationBody comet4(allocateId(), "Comet4", m, Vect2(0, -r), Vect2(0.25*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet4.positions.setMaxPoints(1000);
 
-    r = 100.0 * R; m = M;
+    r = 125.0 * R; m = M;
     SimulationBody star2(allocateId(), "Sirius", M, Vect2(-r, 0), Vect2(0, 0.8*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Star, 40, false, true);
 //    star2.positions.setMaxPoints(2500);
 
@@ -265,6 +265,21 @@ void setupSimulationBodies(SimulationState & sim) {
     m = 0.01*m0;
     SimulationBody comet5(allocateId(), "Comet5", m, Vect2(-r2, 0), Vect2(0, sqrt(0.2*sim.G*M/(1200))), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
     comet5.positions.setMaxPoints(1000);
+
+    r = 70.0 * R; m = 0.01 * m0;
+    SimulationBody comet6(allocateId(), "Comet6", m, Vect2(0, r), Vect2(-0.2*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    comet6.positions.setMaxPoints(1000);
+    SimulationBody comet7(allocateId(), "Comet7", m, Vect2(0, -r), Vect2(0.3*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    comet7.positions.setMaxPoints(1000);
+
+    SimulationBody comet8(allocateId(), "Comet8", m, Vect2(r, -r), Vect2(0.3*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    comet8.positions.setMaxPoints(1000);
+
+    SimulationBody comet9(allocateId(), "Comet9", m, Vect2(-r, -r), Vect2(-0.2*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    comet9.positions.setMaxPoints(1000);
+
+    SimulationBody comet10(allocateId(), "Comet10", m, Vect2(r, 0), Vect2(-0, 0.2*sim.G*M/(r)), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    comet10.positions.setMaxPoints(1000);
 
     sim.bodies.push_back(star);
     sim.bodies.push_back(star2);
@@ -289,6 +304,11 @@ void setupSimulationBodies(SimulationState & sim) {
     sim.bodies.push_back(planet11);
     sim.bodies.push_back(planet12);
     sim.bodies.push_back(comet5);
+    sim.bodies.push_back(comet6);
+    sim.bodies.push_back(comet7);
+    sim.bodies.push_back(comet8);
+    sim.bodies.push_back(comet9);
+    sim.bodies.push_back(comet10);
     //
 
     // star.positions.addTrailPoint(Vect2(star.position.x, star.position.y));
@@ -313,7 +333,7 @@ void bounceBodiesOnTheEdge(SimulationState & sim) {
         }
 
         // remove body if it goes past the boundary
-        if (distanceToCenter > sim.boundary) {
+        if (distanceToCenter > sim.boundary && (sim.bodies[i].kinetic_energy + sim.bodies[i].potential_energy) > 0) {
             std::cout << "Removing body " << sim.bodies[i].name << " from simulation" << std::endl;
             sim.bodies.erase(sim.bodies.begin() + i);
             // Body & body = bodies[i];

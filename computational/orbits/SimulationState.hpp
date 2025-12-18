@@ -13,7 +13,7 @@ struct SimulationState {
     double t = 0.0;
     bool activeSimulation;
     double G = 1;
-    double boundary = 25000;
+    double boundary = 35000;
 };
 
 #endif //MODERN_TUTOR_SIMULATIONSTATE_HPP
