@@ -58,5 +58,6 @@ struct SimulationBody {
 std::ostream& operator<<(std::ostream & os, const SimulationBody &b);
 
 SimulationBody * get_body_by_id(std::vector<SimulationBody> & bodies, BodyID id);
+SimulationBody * get_body_by_name(std::vector<SimulationBody> & bodies, std::string name);
 
 #endif //MODERN_TUTOR_SIMULATIONBODY_HPP

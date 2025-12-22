@@ -27,6 +27,8 @@ class GraphicsDisplay {
 
         void setView(sf::View & view);
 
+        sf::RenderTarget & getRenderTarget();
+
     private:
         sf::RenderWindow mWindow;
         sf::Font mFont;

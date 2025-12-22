@@ -32,6 +32,8 @@ inline void to_json(json& j, const SimulationBody& b) {
                 { "KE", b.kinetic_energy},
                 { "PE", b.potential_energy},
                 {"drawRadius", b.drawRadius},
+                {"showLabel", b.showLabel},
+                {"isStar", b.isStar},
                 {"color", json::array({b.color.r, b.color.g, b.color.b, b.color.a})}};
 }
 
@@ -40,7 +42,12 @@ inline void from_json(const json& j, SimulationBody& b) {
     b.mass = j.at("mass").get<double>();
     b.position = j.at("position").get<Vect2>();
     b.velocity = j.at("velocity").get<Vect2>();
+    b.force = j.at("force").get<Vect2>();
+    b.kinetic_energy = j.at("KE").get<double>();
+    b.potential_energy = j.at("PE").get<double>();
     b.drawRadius = j.value("drawRadius", 3.0f);
+    b.showLabel = j.at("showLabel").get<bool>();
+    b.isStar = j.at("isStar").get<bool>();
 
     auto c = j.value("color", json::array({255,255,255,255}));
     if (!c.is_array() || c.size() != 4) throw std::runtime_error("color must be [r,g,b,a]");
@@ -56,7 +63,8 @@ inline void saveSimulation(const SimulationState & sim, const std::string& path)
     j["version"] = 1;
     j["globals"] = {{ "G", sim.G},
         {"t", sim.t},
-        {"dt", sim.dt}};
+        {"dt", sim.dt},
+        {"showTrails", sim.showTrails}};
 
     j["activeSimulation"] = sim.activeSimulation;
     j["boundary"] = sim.boundary;
@@ -82,6 +90,7 @@ inline SimulationState loadSimulation(const std::string& path) {
     sim.G = g.value("G", sim.G);
     sim.t = g.value("t", 0.0);
     sim.dt = g.value("dt", sim.dt);
+    sim.showTrails = g.value("showTrails", true);
 
     sim.activeSimulation = j.at("activeSimulation");
     sim.boundary = j.at("boundary");

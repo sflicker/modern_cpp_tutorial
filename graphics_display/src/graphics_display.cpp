@@ -8,7 +8,8 @@ GraphicsDisplay::GraphicsDisplay(int width, int height, const std::string &title
     if (!mFont.loadFromFile("/home/scott/FreeSans.ttf")) {
         exit(1);
     }
-    mWindow.setFramerateLimit(60);
+    //mWindow.setFramerateLimit(60);
+    mWindow.setVerticalSyncEnabled(true);
 }
 
 void GraphicsDisplay::clear() { mWindow.clear(); }
@@ -112,3 +113,7 @@ bool GraphicsDisplay::pollEvent(sf::Event & event) {
 }
 
 void GraphicsDisplay::close() { mWindow.close(); }
+
+sf::RenderTarget & GraphicsDisplay::getRenderTarget() {
+    return mWindow;
+}

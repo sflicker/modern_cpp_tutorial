@@ -70,14 +70,6 @@ struct Vect2 {
         double dy = y - v.y;
         return sqrt(dx*dx + dy*dy);
     }
-
-    double length() const {
-        return sqrt(x*x + y*y);
-    }
-
-    double direction() const {
-        return atan2(y, x);
-    }
 };
 
 std::ostream& operator<<(std::ostream& os, const Vect2& v);

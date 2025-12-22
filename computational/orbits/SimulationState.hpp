@@ -13,6 +13,7 @@ struct SimulationState {
     double t = 0.0;
     bool activeSimulation;
     double G = 1;
+    bool showTrails = true;
     double boundary = 35000;
 };
 

@@ -30,3 +30,12 @@ SimulationBody * get_body_by_id(std::vector<SimulationBody> & bodies, BodyID id)
     }
     return nullptr;
 }
+
+SimulationBody * get_body_by_name(std::vector<SimulationBody> & bodies, std::string name) {
+    for (auto &body : bodies) {
+        if (body.name == name) {
+            return &body;
+        }
+    }
+    return nullptr;
+}

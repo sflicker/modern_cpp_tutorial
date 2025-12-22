@@ -1,0 +1,1 @@
+add_executable(asteroids main.cpp Vect2.cpp)

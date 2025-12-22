@@ -23,6 +23,7 @@ using json = nlohmann::json;
 #include "Trail.hpp"
 #include "SimulationBodyJson.hpp"
 #include "Colors.hpp"
+#include "StripChart.hpp"
 
 // sf::Color planet_color = sf::Color::Blue;
 // sf::Color STAR_COLOR = sf::Color(255, 230, 160);     // bright yellow white
@@ -33,10 +34,13 @@ int planet_radius = 6;
 
 Vect2 center;
 
-int XMAX = 800;
-int YMAX = 800;
+int XMAX = 1000;
+int YMAX = 1000;
 
-
+int CAMERA_MODE_CENTER = 1;
+int CAMERA_MODE_STAR1 = 2;
+int CAMERA_MODE_STAR2 = 3;
+int CAMERA_MODE_STAR_MID = 4;
 
 
 void computeForces(SimulationState & sim) {
@@ -157,7 +161,7 @@ void update_display(GraphicsDisplay & display, SimulationState & sim) {
                 sf::Vector2i px = display.mapCoordsToPixel(body.position.x, body.position.y);
                 display.drawText(px.x, px.y, body.name);
             }
-            if (body.positions.getVertexCount() > 2) {
+            if (sim.showTrails && body.positions.getVertexCount() > 2) {
                  display.drawLines(body.positions.getTrail());
             }
         }
@@ -175,8 +179,10 @@ void update_info(GraphicsDisplay & infoWindow, SimulationState & sim) {
         double total_energy = body.kinetic_energy+body.potential_energy;
         SimulationBody * nearest_star = get_body_by_id(sim.bodies, body.nearest_star);
         std::string nearest_star_name = nearest_star != nullptr ? nearest_star->name : "";
-        std::string body_str = fmt::format("Body - {}, KE: {:.3f}, PE: {:.3f}, E: {:.3f}, STAR: {}, DIST: {:.3f}",
+        std::string body_str = fmt::format("Body - {}, KE: {:.3e}, PE: {:.3e}, E: {:.3e}, V: [{:.3e}, {:.3f}], F: [{:.3e} ,{:.3f}], STAR: {}, DIST: {:.3e}",
             body.name, body.kinetic_energy, body.potential_energy, total_energy,
+            body.velocity.length(), 180.0/std::numbers::pi*body.velocity.direction(),
+            body.force.length(), 180.0/std::numbers::pi*body.force.direction(),
             nearest_star_name, body.nearest_star_dist);
         infoWindow.drawText(0, count*30, body_str);
         count++;
@@ -191,20 +197,21 @@ void setupSimulationBodies(SimulationState & sim) {
     double m0 = 1.0;
 
     double r = 40.0 * R;
-
+    double r_companion = 125.0 * R;
     center = Vect2(0.0, 0.0);
 
-    SimulationBody star(allocateId(), "Sun", M, Vect2(0,0), Vect2(0, 0 /*-sqrt(G*M/(r))*/ ), Vect2(0,0), 0, 0, Colors::Star, 40, false, true);
-//    star.positions.setMaxPoints(2500);
+    Vect2 sunVelocity = Vect2(0, -0.5*sqrt(sim.G*M/(r_companion)));
+    SimulationBody star(allocateId(), "Sun", M, Vect2(0,0), Vect2(0, -0.5*sqrt(sim.G*M/(r_companion)) ), Vect2(0,0), 0, 0, Colors::Star, 40, false, true);
+    star.positions.setMaxPoints(1500);
 
     r = 0.4*R; double m = 0.55 * m0;
-    SimulationBody planet1(allocateId(), "Mercury", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/r)) , Vect2(0,0), 0, 0, Colors::Mercury, 10, false, false);
+    SimulationBody planet1(allocateId(), "Mercury", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/r)) , Vect2(0,0), 0, 0, Colors::Mercury, 10, false, false);
 
     r = 0.7*R; m = 0.815 * m0;
     SimulationBody planet2(allocateId(), "Venus", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Venus, 10, false, false);
 
     r = R; m = m0;
-    SimulationBody planet3(allocateId(), "Earth", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Earth, 10, false, false);
+    SimulationBody planet3(allocateId(), "Earth", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Earth, 10, false, false);
 
     r = 1.5 * R; m = .01 *m0;
     SimulationBody planet4(allocateId(), "Mars", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Mars, 10, false, false);
@@ -220,7 +227,7 @@ void setupSimulationBodies(SimulationState & sim) {
     planet5.positions.setMaxPoints(1000);
 
     r = 9.0 * R; m = 50 * m0;
-    SimulationBody planet6(allocateId(), "Saturn", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Saturn, 20, false, false);
+    SimulationBody planet6(allocateId(), "Saturn", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Saturn, 20, false, false);
     planet6.positions.setMaxPoints(1000);
 
     r = 19.0 * R; m = 10 * m0;
@@ -228,25 +235,25 @@ void setupSimulationBodies(SimulationState & sim) {
     planet7.positions.setMaxPoints(1000);
 
     r = 30.0 * R; m = 10 * m0;
-    SimulationBody planet8(allocateId(), "Neptune", m, Vect2(r, 0), Vect2(0, -sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Neptune, 20, false, false);
+    SimulationBody planet8(allocateId(), "Neptune", m, Vect2(-r, 0), Vect2(0, sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Neptune, 20, false, false);
     planet8.positions.setMaxPoints(1000);
 
 
     r = 40.0 * R; m = 0.01 * m0;
-    SimulationBody comet1(allocateId(), "Comet1", m, Vect2(-r, 0), Vect2(0, 0.15*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
+    SimulationBody comet1(allocateId(), "Comet1", m, Vect2(-r, 0), sunVelocity + Vect2(0,  0.15*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet1.positions.setMaxPoints(1000);
 
     r = 35.0 * R; m = 0.01 * m0;
-    SimulationBody comet2(allocateId(), "Comet2", m, Vect2(r, 0), Vect2(0, -0.2*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
+    SimulationBody comet2(allocateId(), "Comet2", m, Vect2(r, 0), sunVelocity + Vect2(0, -0.2*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet2.positions.setMaxPoints(1000);
-    SimulationBody comet3(allocateId(), "Comet3", m, Vect2(0, r), Vect2(-0.1*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
+    SimulationBody comet3(allocateId(), "Comet3", m, Vect2(0, r), sunVelocity + Vect2(-0.1*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet3.positions.setMaxPoints(1000);
-    SimulationBody comet4(allocateId(), "Comet4", m, Vect2(0, -r), Vect2(0.25*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
+    SimulationBody comet4(allocateId(), "Comet4", m, Vect2(0, -r), sunVelocity + Vect2(0.25*sqrt(sim.G*M/(r)), 0), Vect2(0,0), 0, 0, Colors::Comet, 10, false, false);
     comet4.positions.setMaxPoints(1000);
 
     r = 125.0 * R; m = M;
-    SimulationBody star2(allocateId(), "Sirius", M, Vect2(-r, 0), Vect2(0, 0.8*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Star, 40, false, true);
-//    star2.positions.setMaxPoints(2500);
+    SimulationBody star2(allocateId(), "Sirius", M, Vect2(-r, 0), Vect2(0, 0.5*sqrt(sim.G*M/(r))), Vect2(0,0), 0, 0, Colors::Star, 40, false, true);
+    star2.positions.setMaxPoints(1500);
 
     double r2 = r + 100;
     m = 0.3*m0;
@@ -267,9 +274,9 @@ void setupSimulationBodies(SimulationState & sim) {
     comet5.positions.setMaxPoints(1000);
 
     r = 70.0 * R; m = 0.01 * m0;
-    SimulationBody comet6(allocateId(), "Comet6", m, Vect2(0, r), Vect2(-0.2*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    SimulationBody comet6(allocateId(), "Comet6", m, Vect2(0, r), sunVelocity + Vect2(-0.2*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
     comet6.positions.setMaxPoints(1000);
-    SimulationBody comet7(allocateId(), "Comet7", m, Vect2(0, -r), Vect2(0.3*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
+    SimulationBody comet7(allocateId(), "Comet7", m, Vect2(0, -r), sunVelocity + Vect2(0.3*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
     comet7.positions.setMaxPoints(1000);
 
     SimulationBody comet8(allocateId(), "Comet8", m, Vect2(r, -r), Vect2(0.3*sim.G*M/(r), 0), Vect2(0, 0), 0, 0, Colors::Comet, 10, false, false);
@@ -365,15 +372,32 @@ void bounceBodiesOnTheEdge(SimulationState & sim) {
 }
 
 
+void update_chart(GraphicsDisplay & chartWindow, StripChart & chart) {
+    chartWindow.clear();
+    chart.draw(chartWindow.getRenderTarget(), sf::FloatRect(0, 0, 600, 400));
+    chartWindow.display();
+}
+
+
+
 int main() {
     std::cout << "Starting Orbits!\n";
 
     GraphicsDisplay graphics_disp(XMAX, YMAX, "Orbits");
-    GraphicsDisplay infoWindow(800, 800, "Simulation Objects");
+    GraphicsDisplay infoWindow(XMAX+200, YMAX, "Simulation Objects");
+    GraphicsDisplay chartWindow(600, 400, "Chart");
+    StripChart chart;
+
+    std::vector<std::string> bodiesToLog;
+    bodiesToLog.push_back("Sun");
+    bodiesToLog.push_back("Jupiter");
+    bodiesToLog.push_back("Comet3");
 
     SimulationState sim;
     sim.t = 0;
     sim.dt = 0.01;
+
+    int camera_mode = CAMERA_MODE_CENTER;
 
 
    // int nSteps = 1000000;
@@ -392,13 +416,14 @@ int main() {
     graphics_disp.setView(view);
 
     setupSimulationBodies(sim);
+    //sim = loadSimulation("savesim.json");
 
     update_display(graphics_disp, sim);
 
     int trackedIndex = 0;
 
 
-    while (infoWindow.isOpen() && graphics_disp.isOpen()) {
+    while (infoWindow.isOpen() && graphics_disp.isOpen() && chartWindow.isOpen()) {
 
         sf::Event event;
 
@@ -408,18 +433,31 @@ int main() {
             }
         }
 
+        while (chartWindow.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                chartWindow.close();
+            }
+        }
+
         while (graphics_disp.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 graphics_disp.close();
             }
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::P) {
                 sim.activeSimulation = !(sim.activeSimulation);       // pause key
+                simStepTimer.restart();
             }
-
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::T) {
+                sim.showTrails = !sim.showTrails;
+            }
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
+                for (auto &body : sim.bodies) {
+                    body.positions.clear();
+                }
+            }
         }
 
         if (graphics_disp.isOpen() && graphics_disp.pollEvents()) {
-
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
                 exit(0);
             }
@@ -439,24 +477,40 @@ int main() {
                 view.zoom(1.001f);
             }
 
+
+
             float panSpeed = 10.0f;
 
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) trackedIndex = 0;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) trackedIndex = 1;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) trackedIndex = 2;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) trackedIndex = 3;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) trackedIndex = 4;
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9)) trackedIndex = 9;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) camera_mode = CAMERA_MODE_CENTER;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) camera_mode = CAMERA_MODE_STAR1;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) camera_mode= CAMERA_MODE_STAR2;
+            // if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) trackedIndex = 3;
+            // if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) trackedIndex = 4;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9)) camera_mode = CAMERA_MODE_STAR_MID;
 
-            if (trackedIndex == 0) {
+            if (camera_mode == CAMERA_MODE_CENTER) {
                 view.setCenter(0.f, 0.f);
             }
-            else if (trackedIndex == 9) {
+            else if (camera_mode == CAMERA_MODE_STAR_MID) {
                 view.setCenter(center.x, center.y);
             }
-            else if (trackedIndex > 0 && trackedIndex <= sim.bodies.size()) {
-                view.setCenter(sim.bodies[trackedIndex - 1].position.x, sim.bodies[trackedIndex - 1].position.y);
+            else if (camera_mode == CAMERA_MODE_STAR1) {
+                view.setCenter(sim.bodies[0].position.x, sim.bodies[0].position.y);
             }
+            else if (camera_mode == CAMERA_MODE_STAR2) {
+                view.setCenter(sim.bodies[1].position.x, sim.bodies[1].position.y);
+            }
+
+
+            // if (trackedIndex == 0) {
+            //     view.setCenter(0.f, 0.f);
+            // }
+            // else if (trackedIndex == 9) {
+            //     view.setCenter(center.x, center.y);
+            // }
+            // else if (trackedIndex > 0 && trackedIndex <= sim.bodies.size()) {
+            //     view.setCenter(sim.bodies[trackedIndex - 1].position.x, sim.bodies[trackedIndex - 1].position.y);
+            // }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
                 view.move(-panSpeed, 0.f);
@@ -479,6 +533,15 @@ int main() {
                 bounceBodiesOnTheEdge(sim);
                 simStepCount++;
                 sim.t += sim.dt;
+                auto comet3 = get_body_by_name(sim.bodies, "Comet3");
+                if (comet3 != nullptr) {
+                    chart.push(comet3->force.direction()*180/std::numbers::pi);
+                }
+                //update log
+                //..  log.update..
+            }
+            else {
+                sf::sleep(sf::milliseconds(2));
             }
 
             // if (n % 100 == 0) {
@@ -489,6 +552,8 @@ int main() {
             if (simStepTimer.getElapsedTime().asMilliseconds() >= 16.66667f) {
                 update_display(graphics_disp, sim); //planet1, planet2, planet1_positions, planet2_positions);
                 update_info(infoWindow, sim);
+                update_chart(chartWindow, chart);
+
                 simStepCount = 0;
                 simStepTimer.restart();
             }

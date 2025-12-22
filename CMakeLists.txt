@@ -10,4 +10,5 @@ find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 add_subdirectory(tutorials)
 add_subdirectory(graphics_display)
 add_subdirectory(computational)
+add_subdirectory(games)
 
